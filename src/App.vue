@@ -71,6 +71,7 @@
                 if (this.mediaRecording) {
                     this.mediaRecording.stop(true);
                 }
+                this.$refs.recordBtn.classList.remove("record");
                 this.modalRef.close();
             },
             openDetails(idx) {
@@ -100,7 +101,6 @@
 
                 let fillStyle;
                 for (let v = 0; v < 10; v++) {
-
                     fillStyle = '#D8D8D8';
                     if (v < volume)
                         fillStyle = '#673AB7';
@@ -131,6 +131,44 @@
 
                 this.mediaRecording = new MediaRecording();
 
+                this.mediaRecording.analyser.then(analyser => {
+                    let analyserDataSize = 256;
+                    let analyserStart = 32;
+                    let analyserEnd = analyserDataSize;
+                    let analyserDataRange = analyserEnd - analyserStart;
+                    let analyserData = new Uint8Array(analyserDataSize);
+
+                    analyser.fftSize = analyserDataSize;
+                    analyser.smoothingTimeConstant = 0.3;
+
+                    let trackAudioVolume = () => {
+                        volumeSum = 0;
+                        analyser.getByteFrequencyData(analyserData);
+
+                        for (let i = analyserStart; i < analyserEnd; i++) {
+                            volumeSum += analyserData[i];
+                        }
+
+                        let volume = volumeSum / analyserDataRange;
+
+                        if (volume > volumeMax)
+                            volumeMax = volume;
+
+                        volumeData.push(volume);
+                        this.drawVolumeReadout(volume / 10);
+
+                        if (!this.recording) {
+                            this.drawVolumeReadout();
+                            console.log(volumeMax);
+                            return;
+                        }
+
+                        requestAnimationFrame(trackAudioVolume);
+                    };
+
+                    requestAnimationFrame(trackAudioVolume);
+                });
+
                 this.mediaRecording.complete.then(audioData => {
                     if (audioData === null)
                         return;
@@ -141,91 +179,18 @@
                         volumeData[d] /= volumeMax;
                     }
                     console.log(audioData, volumeData);
+
                     this.openedMemo = {
                         title: "Untitled Memo",
                         description: "",
                         url: new Blob([audioData], {type: 'audio/wav'}),
                         volumeData: volumeData
                     };
+                    this.recording = false;
 
-                    this.mediaRecording.analyser.then(analyser => {
-                        this.$refs.recordBtn.classList.remove("record");
-                        let analyserDataSize = 256;
-                        let analyserStart = 32;
-                        let analyserEnd = analyserDataSize;
-                        let analyserDataRange = analyserEnd - analyserStart;
-                        let analyserData = new Uint8Array(analyserDataSize);
-
-                        analyser.fftSize = analyserDataSize;
-                        analyser.smoothingTimeConstant = 0.3;
-
-                        let trackAudioVolume = () => {
-                            volumeSum = 0;
-                            analyser.getByteFrequencyData(analyserData);
-
-                            for (let i = analyserStart; i < analyserEnd; i++) {
-                                volumeSum += analyserData[i];
-                            }
-
-                            let volume = volumeSum / analyserDataRange;
-                            if (volume > volumeMax)
-                                volumeMax = volume;
-
-                            volumeData.push(volume);
-                            this.drawVolumeReadout(volume / 10);
-
-                            if (!this.recording) {
-                                this.drawVolumeReadout();
-                                return;
-                            }
-
-                            requestAnimationFrame(trackAudioVolume);
-                        };
-
-                        requestAnimationFrame(trackAudioVolume);
-                    });
+                    this.mediaRecording.killStream();
 
                 })
-            },
-
-            toggleRecording() {
-                const recordBtn = this.$refs.recordBtn;
-
-                if (!this.recording) {
-                    recordBtn.classList.add("record");
-                    this.rec = new Recorder({
-                        encoderPath: "./waveWorker.min.js"
-                    });
-                    this.stream = new MediaStream();
-                    const audioCtx = new AudioContext();
-                    const listener = audioCtx.createAnalyser();
-                    this.sourceNode.connect(listener);
-
-                    this.rec.start();
-                } else {
-                    this.rec.stop();
-                    this.creating = true;
-                }
-
-
-                this.rec.ondataavailable = (typedArray) => {
-                    recordBtn.classList.remove("record");
-                    if (this.creating) {
-                        const dataBlob = new Blob([typedArray], {type: 'audio/wav'});
-                        const url = URL.createObjectURL(dataBlob);
-
-                        this.closeModal();
-                        this.updating = false;
-
-                        this.openedMemo = {
-                            title: "Untitled Memo",
-                            description: "",
-                            url
-                        }
-                    }
-                };
-
-                this.recording = !this.recording;
             }
         },
         mounted() {

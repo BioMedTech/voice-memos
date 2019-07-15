@@ -10,11 +10,14 @@ class MediaRecorder {
 
             this.recorder = new Recorder({
                 encoderPath: "./waveWorker.min.js",
-                streamPages: false
+                streamPages: true,
+                maxFramesPerPage: 30
             });
 
+            this.recorder.start();
+
             this.recorder.ondataavailable = evt => {
-                let audioData = evt.detail;
+                let audioData = evt;
 
                 if (this.deletePendingRecording) {
                     this.deletePendingRecording = false;
@@ -25,7 +28,6 @@ class MediaRecorder {
                 resolve(audioData);
             };
 
-            this.recorder.start();
         });
     }
 
@@ -35,7 +37,6 @@ class MediaRecorder {
     }
 
     get analyser() {
-
         return new Promise((resolve, reject) => {
 
             let maxCount = 200;
@@ -49,7 +50,7 @@ class MediaRecorder {
                     return setTimeout(checkForSourceNode, 100);
                 }
 
-                let listener = this.recorder.audioContext.createAnalyser();
+                let listener = this.recorder.sourceNode.context.createAnalyser();
                 this.recorder.sourceNode.connect(listener);
 
                 resolve(listener);
