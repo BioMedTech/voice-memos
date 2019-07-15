@@ -9,6 +9,10 @@
   },
   "dependencies": {
     "core-js": "^2.6.5",
+    "materialize-css": "^1.0.0-rc.2",
+    "moment": "^2.24.0",
+    "opus-recorder": "^6.1.1",
+    "recorderjs": "^1.0.1",
     "vue": "^2.6.10"
   },
   "devDependencies": {

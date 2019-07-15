@@ -1,0 +1,46 @@
+:root {
+    --background-color: #673AB7;
+    --color: white;
+    --dark-color: #4527A0;
+    --light-color: #E91E63;
+}
+
+body {
+
+    font-family: Roboto, Helvetica, Arial, sans-serif;
+}
+
+.dark-theme {
+    --background-color: #2C1FFF;
+    --dark-color: #0B01BC;
+}
+
+.light-theme {
+    --background: white;
+    --color: black;
+    --background-color: lightblue;
+}
+
+.center {
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+}
+
+.vertical-center {
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+}
+
+.slide-fade-enter-active {
+    transition: all .3s ease;
+}
+
+.slide-fade-leave-active {
+    transition: all 1s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+}
+
+.slide-fade-enter, .slide-fade-leave-to {
+    height: 0 !important;
+    opacity: 0;
+}
