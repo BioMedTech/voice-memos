@@ -15,8 +15,8 @@
                     </div>
                 </div>
             </div>
-            <div v-if="!redo">
-                <canvas ref="waveform" class="waveform"></canvas>
+            <div class="canvas-wrapper">
+                <canvas v-bind:class="[redo?'d-none':'', 'waveform']" ref="waveform"></canvas>
             </div>
             <div class="header">
                 <div v-if="redo" class="input-field">
@@ -72,8 +72,12 @@
             },
             redoMode() {
                 this.redo = !this.redo;
-                if (!this.redo && this.$props.memo.title.trim() === "") {
-                    this.$props.memo.title = "Untitled Memo"
+                if (!this.redo) {
+                    this.fillProgress();
+                    if (this.$props.memo.title.trim() === "")
+                        this.$props.memo.title = "Untitled Memo"
+                }else if (this.audio && !this.audio.paused){
+                    this.playMemo();
                 }
                 M.updateTextFields();
             },
@@ -81,8 +85,7 @@
                 this.$emit("close");
                 this.$emit("delete", obj)
             },
-            playMemo(e) {
-                e.preventDefault();
+            playMemo() {
                 const playBtn = this.$refs.playBtn;
                 if (this.audio.paused) {
                     this.audio.play();
@@ -164,10 +167,9 @@
 
                 this.audio = document.createElement('audio');
                 this.audio.src = memo.url;
-                const playBtn = this.$refs.playBtn;
 
                 this.audio.addEventListener('ended', () => {
-                    playBtn.innerHTML = "play_arrow";
+                    this.$refs.playBtn.innerHTML = "play_arrow";
                     requestAnimationFrame(this.clearProgress);
 
                 });
@@ -185,9 +187,19 @@
 </script>
 
 <style scoped>
+    .canvas-wrapper {
+        width: 100%;
+        height: 150px;
+    }
+
+    .d-none {
+        display: none !important;
+    }
+
     .waveform {
         width: 100%;
         height: 150px;
+        display: block;
     }
 
     .card-image {

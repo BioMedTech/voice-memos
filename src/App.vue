@@ -98,7 +98,7 @@
                     this.openedMemo = null;
                 }
 
-                this.updating=false;
+                this.updating = false;
             },
             deleteMemo(memo) {
                 const idx = this.memos.indexOf(memo);
@@ -212,7 +212,9 @@
         bottom: -5px;
         right: 20px;
         z-index: 2;
-        height: 92vh;
+        max-height: 120%;
+        max-width: 100%;
+        height: 900px;
         transition: all 233ms cubic-bezier(0, 0, .21, 1) 40ms, opacity 233ms cubic-bezier(0, 0, .21, 1) 123ms;
     }
 
@@ -233,7 +235,7 @@
     }
 
     .content {
-        height: 800px;
+        height: calc(100vh - 140px);
         position: relative;
     }
 
@@ -246,7 +248,7 @@
 
     .btn-floating {
         position: absolute;
-        bottom: 20px;
+        bottom: 30px;
         right: 0;
     }
 
