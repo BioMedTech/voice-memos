@@ -28,13 +28,18 @@
             </div>
             <div class="modal-content">
                 <div class="micro-img">
-                    <canvas ref="canvas" class="record-view__volume-readout js-volume-readout"></canvas>
+                    <svg class="record-view__volume-readout">
+                        <circle v-for="(color, idx) in volumeFill"
+                                r="2" cx="2"
+                                v-bind:cy="2+7*idx"
+                                v-bind:key="idx"
+                                v-bind:fill="color">
+                        </circle>
+                    </svg>
                 </div>
-                <button class="btn btn-large mt-5" v-on:click="startRecording" ref="recordBtn">
+                <button class="btn btn-large play-btn mt-5" v-on:click="startRecording" ref="recordBtn">
                 </button>
-                <div class="modal-footer mt-5">
-                    <a href="#" class="ml-auto" v-on:click="closeModal">Close</a>
-                </div>
+                <button class="btn btn-flat close-btn" v-on:click="closeModal">Close</button>
             </div>
         </div>
     </div>
@@ -45,6 +50,7 @@
     import MemoCard from './components/MemoDetails'
     import M from "materialize-css/dist/js/materialize"
     import MediaRecording from "./components/Recorder.js"
+    import Vue from "vue"
 
     export default {
         name: 'app',
@@ -59,16 +65,19 @@
                 openedMemo: null,
                 memos: [],
                 updating: false,
-                volumeReadoutCtx: {},
-                mediaRecording: {}
+                mediaRecording: {},
+                volumeFill: ['#D8D8D8', '#D8D8D8', '#D8D8D8', '#D8D8D8',
+                    '#D8D8D8', '#D8D8D8', '#D8D8D8', '#D8D8D8',
+                    '#D8D8D8', '#D8D8D8']
             }
         },
         methods: {
             openModal() {
                 this.modalRef.open();
             },
+
             closeModal() {
-                if (this.mediaRecording) {
+                if (this.recording) {
                     this.mediaRecording.stop(true);
                 }
                 this.$refs.recordBtn.classList.remove("record");
@@ -88,6 +97,8 @@
                     this.memos.push(this.openedMemo);
                     this.openedMemo = null;
                 }
+
+                this.updating=false;
             },
             deleteMemo(memo) {
                 const idx = this.memos.indexOf(memo);
@@ -95,25 +106,13 @@
             },
 
             drawVolumeReadout(volume = 0) {
-                this.volumeReadoutCtx.save();
-                this.volumeReadoutCtx.clearRect(0, 0, 4, 67);
-                this.volumeReadoutCtx.translate(0, 63);
-
-                let fillStyle;
                 for (let v = 0; v < 10; v++) {
-                    fillStyle = '#D8D8D8';
-                    if (v < volume)
-                        fillStyle = '#673AB7';
-
-                    this.volumeReadoutCtx.fillStyle = fillStyle;
-                    this.volumeReadoutCtx.beginPath();
-                    this.volumeReadoutCtx.arc(2, 2, 2, 0, Math.PI * 2);
-                    this.volumeReadoutCtx.closePath();
-                    this.volumeReadoutCtx.fill();
-                    this.volumeReadoutCtx.translate(0, -7);
+                    if (v < volume) {
+                        Vue.set(this.volumeFill, 9 - v, '#673AB7');
+                    } else {
+                        Vue.set(this.volumeFill, 9 - v, '#D8D8D8');
+                    }
                 }
-
-                this.volumeReadoutCtx.restore();
             },
 
             startRecording() {
@@ -159,14 +158,15 @@
 
                         if (!this.recording) {
                             this.drawVolumeReadout();
-                            console.log(volumeMax);
                             return;
                         }
 
                         requestAnimationFrame(trackAudioVolume);
+                        // trackAudioVolume();
                     };
 
                     requestAnimationFrame(trackAudioVolume);
+                    // trackAudioVolume();
                 });
 
                 this.mediaRecording.complete.then(audioData => {
@@ -178,13 +178,15 @@
                     for (let d = 0; d < volumeData.length; d++) {
                         volumeData[d] /= volumeMax;
                     }
-                    console.log(audioData, volumeData);
+
+                    const url = URL.createObjectURL(new Blob([audioData], {type: 'audio/wav'}));
+
 
                     this.openedMemo = {
                         title: "Untitled Memo",
                         description: "",
-                        url: new Blob([audioData], {type: 'audio/wav'}),
-                        volumeData: volumeData
+                        url,
+                        volumeData
                     };
                     this.recording = false;
 
@@ -195,7 +197,6 @@
         },
         mounted() {
             this.modalRef = M.Modal.init(this.$refs.modal, {});
-            this.volumeReadoutCtx = this.$refs.canvas.getContext('2d');
         }
     }
 </script>
@@ -209,15 +210,15 @@
 
     .memoCard {
         position: absolute;
-        bottom: 0;
+        bottom: -5px;
         right: 20px;
         z-index: 2;
-        height: 93vh;
+        height: 92vh;
         transition: all 233ms cubic-bezier(0, 0, .21, 1) 40ms, opacity 233ms cubic-bezier(0, 0, .21, 1) 123ms;
     }
 
     nav {
-        height: 15vh;
+        height: 140px;
         padding-top: 10px;
         background: var(--background-color);
         color: var(--color);
@@ -225,19 +226,23 @@
         vertical-align: bottom;
     }
 
+
     nav h2 {
         font-size: 35px;
         line-height: 110px;
+        margin-left: 20px;
     }
 
     .content {
-        height: 85vh;
+        height: 800px;
         position: relative;
     }
 
     .container {
         position: relative;
         height: 100%;
+        margin: 0 auto;
+        max-width: 800px !important;
     }
 
     .btn-floating {
@@ -254,8 +259,10 @@
 
     .modal {
         background: var(--background-color);
-        max-width: 300px;
-        height: 40%;
+        max-width: 280px;
+        max-height: 392px;
+        width: 80%;
+        height: 90%;
         text-align: center;
         overflow: hidden;
     }
@@ -269,7 +276,7 @@
         color: white;
     }
 
-    .modal-content button {
+    .modal-content button.play-btn {
         width: 56px;
         height: 56px;
         margin-top: 24px;
@@ -284,7 +291,7 @@
         display: block;
     }
 
-    .modal-content button:after {
+    .modal-content button.play-btn:after {
         content: '';
         display: block;
         width: 44px;
@@ -299,29 +306,36 @@
         transform-origin: 0 0;
     }
 
-    .modal-content button.record:after {
-        left: 12px;
-        top: 12px;
-        width: 33px;
-        height: 33px;
+    .modal-content button.play-btn.record:after {
+        left: 13px;
+        top: 13px;
+        width: 30px;
+        height: 30px;
         border-radius: 5px !important;
         background: var(--light-color) !important;
     }
 
-    .modal-content button .material-icons {
+    .modal-content button.play-btn .material-icons {
         position: absolute;
         z-index: 1000;
     }
 
-    .modal-footer {
-        background: transparent;
-        margin-top: 20px;
-        padding: 2px 0 !important;
-        text-transform: uppercase;
-    }
 
-    .modal-footer a {
-        color: var(--color) !important;
+    .close-btn {
+        height: 36px;
+        text-transform: uppercase;
+        color: #FFF;
+        font-size: 15px;
+        font-weight: 500;
+        opacity: .57;
+        will-change: opacity;
+        position: absolute;
+        bottom: 8px;
+        right: 16px;
+        background: 0 0;
+        border: none;
+        padding: 0 8px;
+        line-height: 1;
 
     }
 
@@ -330,7 +344,7 @@
         height: 67px;
         position: absolute;
         left: 50%;
-        top: 84px;
+        top: 100px;
         margin-left: -2px;
     }
 

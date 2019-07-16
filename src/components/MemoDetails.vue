@@ -15,6 +15,9 @@
                     </div>
                 </div>
             </div>
+            <div v-if="!redo">
+                <canvas ref="waveform" class="waveform"></canvas>
+            </div>
             <div class="header">
                 <div v-if="redo" class="input-field">
                     <label for="memoTitle">Title</label>
@@ -22,10 +25,12 @@
                 </div>
                 <div v-else>
                     <h2 class="title">{{memo.title}}</h2>
-                    <a class="btn-floating btn-large halfway-fab waves-effect waves-light pink" v-on:click="playMemo"><i
-                            class="material-icons" ref="playBtn">play_arrow</i></a>
                 </div>
             </div>
+            <a class="btn-floating btn-large halfway-fab waves-effect waves-light pink" v-if="!redo"
+               v-on:click="playMemo">
+                <i class="material-icons" ref="playBtn">play_arrow</i>
+            </a>
         </div>
 
         <div class="card-content">
@@ -50,7 +55,9 @@
         data() {
             return {
                 audio: {},
-                redo: false
+                redo: false,
+                canvas: {},
+                context: {}
             }
         },
         methods: {
@@ -73,12 +80,73 @@
                 const playBtn = this.$refs.playBtn;
                 if (this.audio.paused) {
                     this.audio.play();
+
                     playBtn.innerHTML = "pause";
                 } else {
                     this.audio.pause();
                     playBtn.innerHTML = "play_arrow";
                 }
+            },
+            fillProgress() {
+                const percent = this.audio.currentTime / this.audio.duration;
+                this.drawWave(percent, 0.8);
 
+            },
+            clearProgress(){
+                this.drawWave(1, 0.2);
+            },
+            drawWave(percent, alpha) {
+                if (this.context && this.canvas) {
+                    this.context.clearRect(0, 0, this.canvas.width * percent, this.canvas.height);
+                    this.context.save();
+
+                    this.context.translate(0, this.canvas.height * 0.5);
+                    this.context.beginPath();
+                    this.context.globalAlpha = alpha;
+
+                    let x, h = 0;
+
+                    const memo = this.$props.memo;
+
+                    for (let d = 0; d < Math.floor(memo.volumeData.length * percent); d++) {
+                        x = (d / memo.volumeData.length) * this.canvas.width;
+
+                        h = memo.volumeData[d] * this.canvas.maxHeight * 0.5;
+                        h = Math.max(1, h);
+
+                        this.context.lineTo(x, -h);
+                    }
+
+                    for (let d = Math.floor((memo.volumeData.length - 1) * percent); d >= 0; d--) {
+                        x = (d / memo.volumeData.length) * this.canvas.width;
+                        h = memo.volumeData[d] * this.canvas.maxHeight * 0.5;
+                        h = Math.max(1, h);
+                        this.context.lineTo(x, h);
+                    }
+
+                    this.context.closePath();
+                    this.context.fill();
+                    this.context.restore();
+                }
+
+            },
+            initCanvas() {
+                const canvas = this.$refs.waveform;
+                const dPR = window.devicePixelRatio || 1;
+
+                this.canvas.width = canvas.parentElement.offsetWidth * dPR;
+                this.canvas.height = canvas.parentElement.offsetHeight * dPR;
+
+                canvas.style.width = this.canvas.width + 'px';
+                canvas.style.height = this.canvas.height + 'px';
+
+                this.context = canvas.getContext("2d");
+                this.context.scale(dPR, dPR);
+
+                const padding = 50;
+                this.canvas.maxHeight = this.canvas.height - (2 * padding);
+
+                this.drawWave(1, 0.2);
             }
         },
         mounted() {
@@ -90,38 +158,63 @@
 
                 this.audio = document.createElement('audio');
                 this.audio.src = memo.url;
+                const playBtn = this.$refs.playBtn;
+
+                this.audio.addEventListener('ended', () => {
+                    playBtn.innerHTML = "play_arrow";
+                    requestAnimationFrame(this.clearProgress);
+
+                });
+                this.audio.addEventListener('timeupdate', () => {
+                    requestAnimationFrame(this.fillProgress);
+                });
 
                 link.href = memo.url;
                 link.download = memo.title + ".wav";
                 this.$refs.details.appendChild(this.audio);
+                this.initCanvas();
             }
         }
     }
 </script>
 
 <style scoped>
+    .waveform {
+        width: 100%;
+        height: 150px;
+    }
+
     .card-image {
         font-size: 18px;
         color: var(--color) !important;
         background: var(--dark-color);
         padding: 20px;
-        height: 220px;
+        height: 288px;
+        position: relative;
     }
 
     .card .title {
         font-weight: bold;
         font-size: 30px;
-        line-height: 60px;
+        /*line-height: 60px;*/
     }
+
+    /*.btn-floating{*/
+    /*right: 0!important;*/
+    /*}*/
 
     .card {
         margin-bottom: 0 !important;
-        min-width: 500px;
-        margin-left: 8px
+        min-width: 450px;
+        max-width: 800px;
+        margin-left: 8px;
     }
 
     .header {
-        margin-top: 100px;
+        position: absolute;
+        left: 20px;
+        bottom: 2px;
+
     }
 
     .icons {
@@ -150,8 +243,8 @@
         color: lightgray;
     }
 
-    .icon-group i {
-        margin: 0 20px;
+    .icon-group i:not(:last-child) {
+        margin-right: 25px;
     }
 
     .icons i:hover {
