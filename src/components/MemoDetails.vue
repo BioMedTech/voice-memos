@@ -20,14 +20,14 @@
             </div>
             <div class="header">
                 <div v-if="redo" class="input-field">
-                    <label for="memoTitle">Title</label>
-                    <input type="text" class="active" v-model="memo.title" id="memoTitle">
+                    <label for="memoTitle" class="active">Title</label>
+                    <input type="text" v-model="memo.title" id="memoTitle">
                 </div>
                 <div v-else>
                     <h2 class="title">{{memo.title}}</h2>
                 </div>
             </div>
-            <a class="btn-floating btn-large halfway-fab waves-effect waves-light pink" v-if="!redo"
+            <a class="btn-floating btn-large halfway-fab pink" v-if="!redo"
                v-on:click="playMemo">
                 <i class="material-icons" ref="playBtn">play_arrow</i>
             </a>
@@ -35,8 +35,8 @@
 
         <div class="card-content">
             <div v-if="redo" class="input-field">
-                <label for="memoDescr">Description</label>
-                <input type="text" class="active" v-model="memo.description" id="memoDescr">
+                <label for="memoDescr" class="active">Description</label>
+                <input type="text" v-model="memo.description" id="memoDescr">
             </div>
             <div v-else>
                 <p class="helper-text">Description</p>
@@ -65,10 +65,16 @@
                 this.$emit("close")
             },
             saveMemo() {
+                if (this.$props.memo.title.trim() === "") {
+                    this.$props.memo.title = "Untitled Memo"
+                }
                 this.$emit("save")
             },
             redoMode() {
                 this.redo = !this.redo;
+                if (!this.redo && this.$props.memo.title.trim() === "") {
+                    this.$props.memo.title = "Untitled Memo"
+                }
                 M.updateTextFields();
             },
             deleteMemo(e, obj) {
@@ -92,12 +98,12 @@
                 this.drawWave(percent, 0.8);
 
             },
-            clearProgress(){
+            clearProgress() {
                 this.drawWave(1, 0.2);
             },
             drawWave(percent, alpha) {
                 if (this.context && this.canvas) {
-                    this.context.clearRect(0, 0, this.canvas.width * percent, this.canvas.height);
+                    this.context.clearRect(0, 0, Math.floor(this.canvas.width * percent), this.canvas.height);
                     this.context.save();
 
                     this.context.translate(0, this.canvas.height * 0.5);
@@ -214,6 +220,7 @@
         position: absolute;
         left: 20px;
         bottom: 2px;
+        right: 20px;
 
     }
 

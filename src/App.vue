@@ -10,7 +10,7 @@
         <div class="content">
             <div class="container">
                 <Memos v-bind:memos="memos" v-on:openDetails="openDetails"/>
-                <a class="btn-floating btn-large waves-effect waves-light pink" v-on:click="openModal"><i
+                <a class="btn-floating btn-large pink" v-on:click="openModal"><i
                         class="material-icons">add</i></a>
                 <transition name="slide-fade">
                     <MemoCard class="memoCard"
@@ -189,7 +189,6 @@
                         volumeData
                     };
                     this.recording = false;
-
                     this.mediaRecording.killStream();
 
                 })
