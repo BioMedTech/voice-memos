@@ -73,10 +73,10 @@
             redoMode() {
                 this.redo = !this.redo;
                 if (!this.redo) {
-                    this.fillProgress();
+                    this.audio.currentTime === this.audio.duration ? this.clearProgress() : this.fillProgress();
                     if (this.$props.memo.title.trim() === "")
                         this.$props.memo.title = "Untitled Memo"
-                }else if (this.audio && !this.audio.paused){
+                } else if (this.audio && !this.audio.paused) {
                     this.playMemo();
                 }
                 M.updateTextFields();
@@ -106,7 +106,7 @@
             },
             drawWave(percent, alpha) {
                 if (this.context && this.canvas) {
-                    this.context.clearRect(0, 0, Math.floor(this.canvas.width * percent), this.canvas.height);
+                    this.context.clearRect(0, 0, Math.floor(this.canvas.width * percent - 2), this.canvas.height);
                     this.context.save();
 
                     this.context.translate(0, this.canvas.height * 0.5);
