@@ -4,7 +4,7 @@ const { MongoServicePromiseClient } = require('../mongopb/mongo_grpc_web_pb');
 class mongoService {
     constructor(database, collection) {
         this.connection = new MongoServicePromiseClient(
-            'http://localhost:8081');
+            'http://165.22.89.255:8081');
         this.database = database;
         this.collection = collection;
         this.location = new MongoServiceClasses.Location();

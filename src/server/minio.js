@@ -4,7 +4,7 @@ const { MinioServicePromiseClient } = require('../miniopb/minio_grpc_web_pb');
 
 class MinioService {
     constructor(bucketName) {
-        this.connection = new MinioServicePromiseClient("http://localhost:8082");
+        this.connection = new MinioServicePromiseClient("http://157.230.121.76:8082");
 
         this.bucketName = bucketName;
         this.bucket = new MinioServiceClasses.Bucket();
