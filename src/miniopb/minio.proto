@@ -1,0 +1,96 @@
+syntax = "proto3";
+
+package bucket;
+option go_package = "miniopb";
+
+message Bucket {
+    string title = 1;
+    string location = 2;
+}
+
+message CreateBucketRequest {
+    Bucket bucket = 1;
+}
+
+message CreateBucketResponse {
+    string full_path = 1;
+}
+
+message DeleteBucketRequest {
+    string full_path = 1;
+}
+
+message DeleteBucketResponse {
+    string full_path = 1;
+}
+
+
+message Object {
+    string filename = 1;
+    string bucket_name = 2;
+    string type = 3;
+}
+
+message ObjectData {
+    string key = 1;
+    string bucket = 2;
+}
+
+message ObjectWithData {
+    string filename = 1;
+    string bucket_name = 2;
+    string type = 3;
+    bytes data = 4;
+    bool create = 5;
+}
+
+message GetObjectUrlRequest {
+    ObjectData data = 1;
+}
+
+message GetObjectUrlResponse {
+    string url = 1;
+}
+
+message PutObjectRequest {
+    ObjectWithData object = 1;
+}
+
+message PutObjectResponse {
+    string key = 1;
+}
+
+message PutObjectUrlRequest {
+    ObjectData data = 1;
+    string type = 2;
+}
+
+message PutObjectUrlResponse {
+    string url = 1;
+    string key = 2;
+}
+
+
+message DeleteObjectRequest {
+    ObjectData data = 1;
+}
+
+message DeleteObjectResponse {
+
+}
+
+
+service MinioService {
+    rpc CreateBucket (CreateBucketRequest) returns (CreateBucketResponse) {
+    };
+    rpc DeleteBucket (DeleteBucketRequest) returns (DeleteBucketResponse) {
+    };
+    rpc GetObjectUrl (GetObjectUrlRequest) returns (GetObjectUrlResponse) {
+    };
+    rpc PutObject (PutObjectRequest) returns (PutObjectResponse) {
+    };
+    rpc PutObjectUrl (PutObjectUrlRequest) returns (PutObjectUrlResponse) {
+    };
+    rpc DeleteObject (DeleteObjectRequest) returns (DeleteObjectResponse) {
+    };
+}
