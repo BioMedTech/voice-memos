@@ -13,7 +13,7 @@
     "google-protobuf": "^3.11.2",
     "grpc-web": "^1.0.7",
     "materialize-css": "^1.0.0-rc.2",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "opus-recorder": "^6.1.1",
     "recorderjs": "^1.0.1",
     "vue": "^2.6.10"
